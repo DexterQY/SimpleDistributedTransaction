@@ -14,7 +14,7 @@ public class CommodityController {
     private CommodityService commodityService;
 
     @PostMapping("/commodity/{id}")
-    public Commodity commodity(@PathVariable String id) {
-        return commodityService.commodity(id);
+    public Commodity commodity(@PathVariable String id, String sdtGroupId) {
+        return commodityService.commodity(id, sdtGroupId);
     }
 }

@@ -11,10 +11,16 @@ import per.qy.sdt.client.model.TransactionTask;
 import per.qy.sdt.client.model.TransactionTaskMap;
 import per.qy.sdt.client.util.TransactionOptions;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @Aspect
 @Order(9999)
 @Component
 public class SdtTransactionalAspect {
+
+    private static final Map<String, Transaction> TRANSACTION_MAP = new HashMap<>();
 
     @Pointcut("@annotation(sdtTransactional)")
     public void sdtTransactionalPointcut(SdtTransactional sdtTransactional) {
@@ -22,13 +28,20 @@ public class SdtTransactionalAspect {
 
     @Before("sdtTransactionalPointcut(sdtTransactional)")
     public void before(JoinPoint joinPoint, SdtTransactional sdtTransactional) {
-        System.out.println("SdtTransactionalAspect before: " + sdtTransactional.id());
+        System.out.println("SdtTransactionalAspect before");
+
+        Object[] args = joinPoint.getArgs();
+        String groupId = (String) args[args.length - 1];
+        String id = UUID.randomUUID().toString().replace("-", "");
+
         Transaction transaction = new Transaction();
-        transaction.setId(sdtTransactional.id());
-        transaction.setGroupId(sdtTransactional.groupId());
+        transaction.setId(id);
+        transaction.setGroupId(groupId);
         transaction.setOption(TransactionOptions.REGISTER);
         // 向事务组中心注册事务
         TransactionManagerClient.sendTransaction(transaction);
+
+        TRANSACTION_MAP.put(transaction.getGroupId(), transaction);
 
         TransactionTask transactionTask = new TransactionTask(transaction.getId());
         TransactionTaskMap.put(transactionTask);
@@ -36,21 +49,23 @@ public class SdtTransactionalAspect {
 
     @AfterReturning("sdtTransactionalPointcut(sdtTransactional)")
     public void afterReturning(JoinPoint joinPoint, SdtTransactional sdtTransactional) {
-        System.out.println("SdtTransactionalAspect afterReturning: " + sdtTransactional.id());
-        Transaction transaction = new Transaction();
-        transaction.setId(sdtTransactional.id());
-        transaction.setGroupId(sdtTransactional.groupId());
+        System.out.println("SdtTransactionalAspect afterReturning");
+        Object[] args = joinPoint.getArgs();
+        String groupId = (String) args[args.length - 1];
+        Transaction transaction = TRANSACTION_MAP.get(groupId);
         transaction.setOption(TransactionOptions.COMMIT);
         TransactionManagerClient.sendTransaction(transaction);
+        TRANSACTION_MAP.remove(groupId);
     }
 
     @AfterThrowing(value = "sdtTransactionalPointcut(sdtTransactional)", throwing = "e")
     public void afterThrowing(JoinPoint joinPoint, SdtTransactional sdtTransactional, Throwable e) {
-        System.out.println("SdtTransactionalAspect afterThrowing: " + sdtTransactional.id());
-        Transaction transaction = new Transaction();
-        transaction.setId(sdtTransactional.id());
-        transaction.setGroupId(sdtTransactional.groupId());
+        System.out.println("SdtTransactionalAspect afterThrowing");
+        Object[] args = joinPoint.getArgs();
+        String groupId = (String) args[args.length - 1];
+        Transaction transaction = TRANSACTION_MAP.get(groupId);
         transaction.setOption(TransactionOptions.ROLLBACK);
         TransactionManagerClient.sendTransaction(transaction);
+        TRANSACTION_MAP.remove(groupId);
     }
 }

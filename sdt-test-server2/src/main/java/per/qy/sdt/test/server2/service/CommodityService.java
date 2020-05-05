@@ -15,9 +15,9 @@ public class CommodityService {
     @Autowired
     private CommodityDao commodityDao;
 
-    @SdtTransactional(id = "server2", groupId = "111")
+    @SdtTransactional
     @Transactional(rollbackFor = Exception.class)
-    public Commodity commodity(String id) {
+    public Commodity commodity(String id, String sdtGroupId) {
         Commodity commodity;
         Optional<Commodity> commodityOpt = commodityDao.findById(id);
         if (commodityOpt.isEmpty()) {

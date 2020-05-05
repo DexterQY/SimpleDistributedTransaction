@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 import per.qy.sdt.test.server1.entity.OrderForm;
 import per.qy.sdt.test.server1.service.OrderService;
 
+import java.util.UUID;
+
 @RestController
 public class OrderController {
 
@@ -15,6 +17,7 @@ public class OrderController {
 
     @GetMapping("/order/{commodityId}")
     public OrderForm order(@PathVariable String commodityId) {
-        return orderService.order(commodityId);
+        String sdtGroupId = UUID.randomUUID().toString().replace("-", "");
+        return orderService.order(commodityId, sdtGroupId);
     }
 }

@@ -7,8 +7,4 @@ import java.lang.annotation.*;
 @Inherited
 @Documented
 public @interface SdtTransactional {
-
-    String id();
-
-    String groupId();
 }

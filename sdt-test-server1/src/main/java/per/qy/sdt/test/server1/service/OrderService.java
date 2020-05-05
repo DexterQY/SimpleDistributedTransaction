@@ -16,16 +16,17 @@ public class OrderService {
     @Autowired
     private OrderDao orderDao;
 
-    @SdtTransactional(id = "server1", groupId = "111")
+    @SdtTransactional
     @Transactional(rollbackFor = Exception.class)
-    public OrderForm order(String commodityId) {
+    public OrderForm order(String commodityId, String sdtGroupId) {
         OrderForm orderForm = new OrderForm();
         orderForm.setCommodityId(commodityId);
         orderForm.setPrice(BigDecimal.valueOf(12.5));
-        new RestTemplate().postForLocation("http://localhost:9002/commodity/" + commodityId, null);
+        new RestTemplate().postForLocation("http://localhost:9002/commodity/" + commodityId
+                + "?sdtGroupId=" + sdtGroupId, null);
         orderDao.save(orderForm);
         System.out.println("order success " + orderForm);
-        int i = 1/0;
+        int i = 1 / 0;
         return orderForm;
     }
 }
